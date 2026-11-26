@@ -7,3 +7,8 @@ variable "ssh_allowed_cidr" {
     error_message = "Enter a valid IPv4 address in /32 format."
   }
 }
+
+variable "key_name" {
+  description = "Name of an existing EC2 key pair in the instance region."
+  type        = string
+}

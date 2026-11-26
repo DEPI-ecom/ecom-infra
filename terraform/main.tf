@@ -29,3 +29,9 @@ module "subnet_b" {
   public                = true
   public_route_table_id = module.vpc.public_route_table_id
 }
+
+module "security" {
+  source           = "./modules/security"
+  vpc_id           = module.vpc.id
+  ssh_allowed_cidr = var.ssh_allowed_cidr
+}

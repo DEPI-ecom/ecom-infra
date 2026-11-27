@@ -4,8 +4,8 @@
   become: true
   vars:
     argocd_version: v3.6.2
-    helm_repo: git@github.com:Eng-Moaz/depi-helm.git
-    apps_repo: git@github.com:Eng-Moaz/depi-argocd.git
+    helm_repo: git@github.com:DEPI-ecom/ecom-infra
+    apps_repo: git@github.com:DEPI-ecom/ecom-infra
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
   tasks:

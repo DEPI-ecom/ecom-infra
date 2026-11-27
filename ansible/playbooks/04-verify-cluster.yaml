@@ -1,0 +1,34 @@
+---
+- name: Verify the cluster
+  hosts: control_plane
+  become: true
+  tasks:
+    - name: Wait until all nodes are Ready
+      ansible.builtin.command: kubectl get nodes --no-headers
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: nodes
+      until: >-
+        nodes.stdout_lines | length == groups['k8s'] | length and
+        (nodes.stdout_lines | select('search', ' Ready ') | list | length) == groups['k8s'] | length
+      retries: 40
+      delay: 15
+      changed_when: false
+
+    - name: Label the workers
+      ansible.builtin.command: kubectl label node {{ item }} node-role.kubernetes.io/worker= --overwrite
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      loop: "{{ groups['workers'] }}"
+      changed_when: false
+
+    - name: kubectl get nodes
+      ansible.builtin.command: kubectl get nodes -o wide
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: nodes_wide
+      changed_when: false
+
+    - name: Show nodes
+      ansible.builtin.debug:
+        var: nodes_wide.stdout_lines

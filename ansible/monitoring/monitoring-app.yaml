@@ -35,10 +35,10 @@ spec:
         alertmanager:
           enabled: true
 
-        nodeExporter:
+        prometheus-node-exporter:
           enabled: true
 
-        kubeStateMetrics:
+        kube-state-metrics:
           enabled: true
   destination:
     server: https://kubernetes.default.svc

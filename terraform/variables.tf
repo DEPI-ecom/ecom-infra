@@ -29,7 +29,7 @@ variable "key_name" {
 }
 
 variable "db_ami_id" {
-  description = "ID of a prepared x86_64 Amazon Linux 2023 AMI with the packages and container images needed to join the cluster offline and run PostgreSQL."
+  description = "ID of a prepared x86_64 Amazon Linux 2023 AMI with preinstalled Kubernetes packages, PostgreSQL image, and boot-time EBS formatting/mount setup for /mnt/postgres-data."
   type        = string
 
   validation {

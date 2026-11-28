@@ -28,6 +28,23 @@
         KUBECONFIG: /etc/kubernetes/admin.conf
       changed_when: false
 
+    # The Helm chart in ecom-deploy uses these labels to decide where pods run.
+    - name: Label the public and backend nodes
+      ansible.builtin.command: kubectl label node {{ item.node }} marketly.io/role={{ item.role }} --overwrite
+      loop:
+        - { node: public-worker, role: public }
+        - { node: worker-1, role: backend }
+        - { node: worker-2, role: backend }
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      changed_when: false
+
+    - name: Keep other pods off the database node
+      ansible.builtin.command: kubectl taint node db-worker marketly.io/role=database:NoSchedule --overwrite
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      changed_when: false
+
     - name: kubectl get nodes
       ansible.builtin.command: kubectl get nodes -o wide
       environment:

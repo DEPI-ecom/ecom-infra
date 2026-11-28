@@ -9,7 +9,5 @@
       register: kubelet_conf
 
     - name: kubeadm join
-      ansible.builtin.command: >-
-        {{ hostvars[groups['control_plane'][0]].join_command.stdout }}
-        --node-name={{ inventory_hostname }}
+      ansible.builtin.command: "{{ hostvars[groups['control_plane'][0]].join_command.stdout }}"
       when: not kubelet_conf.stat.exists

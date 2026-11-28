@@ -1,0 +1,72 @@
+---
+- name: Prepare the isolated database worker's EBS data volume
+  hosts: db_workers
+  become: true
+  vars:
+    postgres_data_path: /mnt/postgres-data
+    postgres_volume_device: "/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_{{ postgres_ebs_volume_id | regex_replace('-', '') }}"
+  tasks:
+    - name: Wait for SSH through the bastion
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Check for the attached PostgreSQL EBS device
+      ansible.builtin.stat:
+        path: "{{ postgres_volume_device }}"
+        follow: true  # the by-id path is a link to the real disk
+      register: postgres_volume
+
+    - name: Require the Terraform attached EBS device
+      ansible.builtin.assert:
+        that:
+          - postgres_volume.stat.exists
+          - postgres_volume.stat.isblk
+        fail_msg: "The PostgreSQL EBS volume was not found at {{ postgres_volume_device }}."
+
+    - name: Detect an existing filesystem on the PostgreSQL EBS volume
+      ansible.builtin.command: blkid -o value -s TYPE {{ postgres_volume_device }}
+      register: postgres_filesystem
+      changed_when: false
+      failed_when: false
+
+    - name: Create an ext4 filesystem on a new PostgreSQL EBS volume
+      ansible.builtin.command: mkfs.ext4 -F {{ postgres_volume_device }}
+      when: postgres_filesystem.rc != 0
+
+    - name: Read the PostgreSQL EBS filesystem UUID
+      ansible.builtin.command: blkid -o value -s UUID {{ postgres_volume_device }}
+      register: postgres_filesystem_uuid
+      changed_when: false
+
+    - name: Create the PostgreSQL data mount point
+      ansible.builtin.file:
+        path: "{{ postgres_data_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Persist the EBS filesystem mount
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: "^UUID={{ postgres_filesystem_uuid.stdout }}\\s+"
+        line: "UUID={{ postgres_filesystem_uuid.stdout }} {{ postgres_data_path }} ext4 defaults,nofail 0 2"
+        state: present
+
+    - name: Check whether the PostgreSQL data volume is mounted
+      ansible.builtin.command: mountpoint -q {{ postgres_data_path }}
+      register: postgres_mountpoint
+      changed_when: false
+      failed_when: false
+
+    - name: Mount the PostgreSQL EBS volume
+      ansible.builtin.command: mount {{ postgres_data_path }}
+      when: postgres_mountpoint.rc != 0
+
+    - name: Set ownership for the PostgreSQL Alpine image process
+      ansible.builtin.file:
+        path: "{{ postgres_data_path }}"
+        state: directory
+        owner: "70"
+        group: "70"
+        mode: "0700"

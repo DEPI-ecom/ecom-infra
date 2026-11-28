@@ -1,4 +1,7 @@
 ---
+- name: Prepare isolated PostgreSQL worker and attached data volume
+  ansible.builtin.import_playbook: playbooks/00-prepare-db-worker.yaml
+
 - name: Install Kubernetes prerequisites and kubeadm
   ansible.builtin.import_playbook: playbooks/01-install-kubeadm.yaml
 

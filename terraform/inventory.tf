@@ -15,7 +15,7 @@ resource "local_file" "ansible_inventory" {
     worker-2 ansible_host=${module.worker_2.private_ip}
 
     [db_workers]
-    db-worker ansible_host=${module.db_worker.private_ip}
+    db-worker ansible_host=${module.db_worker.private_ip} postgres_ebs_volume_id=${aws_ebs_volume.postgres.id}
 
     [workers:children]
     public_workers

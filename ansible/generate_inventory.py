@@ -14,6 +14,7 @@ REQUIRED_OUTPUTS = (
     "worker_2_private_ip",
     "public_worker_private_ip",
     "db_worker_private_ip",
+    "db_volume_id",
 )
 
 
@@ -51,6 +52,7 @@ def main() -> int:
     worker_2_ip = values["worker_2_private_ip"]
     public_worker_ip = values["public_worker_private_ip"]
     db_worker_ip = values["db_worker_private_ip"]
+    db_volume_id = values["db_volume_id"]
 
     inventory = f"""[bastions]
 bastion ansible_host={bastion_ip}
@@ -66,7 +68,7 @@ worker-1 ansible_host={worker_1_ip}
 worker-2 ansible_host={worker_2_ip}
 
 [db_workers]
-db-worker ansible_host={db_worker_ip}
+db-worker ansible_host={db_worker_ip} postgres_ebs_volume_id={db_volume_id}
 
 [workers:children]
 public_workers

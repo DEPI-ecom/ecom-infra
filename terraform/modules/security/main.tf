@@ -114,3 +114,14 @@ resource "aws_vpc_security_group_ingress_rule" "public_web" {
   to_port           = tonumber(each.key)
   ip_protocol       = "tcp"
 }
+
+# Argo CD UI (NodePort 30443), open only to the same addresses that may use SSH.
+resource "aws_vpc_security_group_ingress_rule" "argocd_ui" {
+  for_each = setunion(var.team_ssh_allowed_cidrs, [var.ssh_allowed_cidr])
+
+  security_group_id = aws_security_group.public_ingress.id
+  cidr_ipv4         = each.value
+  from_port         = 30443
+  to_port           = 30443
+  ip_protocol       = "tcp"
+}

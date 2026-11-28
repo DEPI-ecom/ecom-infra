@@ -27,6 +27,13 @@
         - statefulset/argocd-application-controller
       changed_when: false
 
+    # NodePort keeps the UI available without a tunnel. Terraform limits who can reach it.
+    - name: Expose the Argo CD UI on NodePort 30443
+      ansible.builtin.command: >-
+        kubectl patch svc argocd-server -n argocd
+        -p '{"spec":{"type":"NodePort","ports":[{"name":"https","port":443,"nodePort":30443}]}}'
+      changed_when: false
+
     # The root app creates one Application per service. ecom-deploy is public, so no key is needed.
     - name: Create the root Application
       ansible.builtin.command: kubectl apply -f {{ root_app }}

@@ -12,6 +12,9 @@ REQUIRED_OUTPUTS = (
     "control_plane_private_ip",
     "worker_1_private_ip",
     "worker_2_private_ip",
+    "public_worker_private_ip",
+    "db_worker_private_ip",
+    "db_volume_id",
 )
 
 
@@ -47,6 +50,9 @@ def main() -> int:
     control_plane_ip = values["control_plane_private_ip"]
     worker_1_ip = values["worker_1_private_ip"]
     worker_2_ip = values["worker_2_private_ip"]
+    public_worker_ip = values["public_worker_private_ip"]
+    db_worker_ip = values["db_worker_private_ip"]
+    db_volume_id = values["db_volume_id"]
 
     inventory = f"""[bastion]
 bastion ansible_host={bastion_ip}
@@ -54,9 +60,20 @@ bastion ansible_host={bastion_ip}
 [control_plane]
 control-plane ansible_host={control_plane_ip}
 
-[workers]
+[public_workers]
+public-worker ansible_host={public_worker_ip}
+
+[private_workers]
 worker-1 ansible_host={worker_1_ip}
 worker-2 ansible_host={worker_2_ip}
+
+[db_workers]
+db-worker ansible_host={db_worker_ip} postgres_ebs_volume_id={db_volume_id}
+
+[workers:children]
+public_workers
+private_workers
+db_workers
 
 [k8s:children]
 control_plane

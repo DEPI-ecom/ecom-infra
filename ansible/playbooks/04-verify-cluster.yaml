@@ -22,6 +22,12 @@
       loop: "{{ groups['workers'] }}"
       changed_when: false
 
+    - name: Mark the isolated database worker for PostgreSQL scheduling
+      ansible.builtin.command: kubectl label node db-worker marketly.io/role=database --overwrite
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      changed_when: false
+
     - name: kubectl get nodes
       ansible.builtin.command: kubectl get nodes -o wide
       environment:

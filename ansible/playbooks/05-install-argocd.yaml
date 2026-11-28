@@ -1,0 +1,33 @@
+---
+- name: Install Argo CD
+  hosts: control_plane
+  become: true
+  vars:
+    argocd_version: v3.6.2
+    root_app: https://raw.githubusercontent.com/DEPI-ecom/ecom-deploy/main/argocd/root.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  tasks:
+    - name: Create the argocd namespace
+      ansible.builtin.shell: kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+      changed_when: false
+
+    - name: Install Argo CD
+      ansible.builtin.command: >-
+        kubectl apply -n argocd --server-side --force-conflicts
+        -f https://raw.githubusercontent.com/argoproj/argo-cd/{{ argocd_version }}/manifests/install.yaml
+      changed_when: false
+
+    - name: Wait for Argo CD to be ready
+      ansible.builtin.command: kubectl rollout status {{ item }} -n argocd --timeout=300s
+      loop:
+        - deployment/argocd-server
+        - deployment/argocd-repo-server
+        - deployment/argocd-redis
+        - statefulset/argocd-application-controller
+      changed_when: false
+
+    # The root app creates one Application per service. ecom-deploy is public, so no key is needed.
+    - name: Create the root Application
+      ansible.builtin.command: kubectl apply -f {{ root_app }}
+      changed_when: false

@@ -97,6 +97,17 @@ jobs:
             exit 1
           fi
 
+      - name: Show Elastic IPs
+        if: inputs.execute
+        working-directory: terraform
+        run: |
+          {
+            echo "### Elastic IPs"
+            echo "- Website (public worker): $(terraform output -raw public_worker_public_ip)"
+            echo "- Bastion (SSH): $(terraform output -raw bastion_public_ip)"
+            echo "- NAT gateway: $(terraform output -raw nat_public_ip)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Export Ansible inventory
         if: inputs.execute
         working-directory: terraform

@@ -23,7 +23,7 @@
 
     - name: Install flannel network plugin
       ansible.builtin.command: >-
-        kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+        kubectl apply -f https://github.com/flannel-io/flannel/releases/download/v0.28.11/kube-flannel.yml
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
       changed_when: false

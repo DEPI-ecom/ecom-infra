@@ -15,6 +15,16 @@ resource "aws_vpc_security_group_ingress_rule" "bastion_ssh" {
   ip_protocol       = "tcp"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "bastion_ssh_team" {
+  for_each = setsubtract(var.team_ssh_allowed_cidrs, toset([var.ssh_allowed_cidr]))
+
+  security_group_id = aws_security_group.bastion.id
+  cidr_ipv4         = each.value
+  from_port         = 22
+  to_port           = 22
+  ip_protocol       = "tcp"
+}
+
 resource "aws_vpc_security_group_egress_rule" "bastion_out" {
   security_group_id = aws_security_group.bastion.id
   cidr_ipv4         = "0.0.0.0/0"

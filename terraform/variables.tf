@@ -8,6 +8,21 @@ variable "ssh_allowed_cidr" {
   }
 }
 
+variable "team_ssh_allowed_cidrs" {
+  description = "Additional public IPv4 addresses allowed to SSH to the bastion, in /32 format."
+  type        = set(string)
+  default     = []
+  nullable    = false
+
+  validation {
+    condition = alltrue([
+      for cidr in var.team_ssh_allowed_cidrs :
+      can(cidrnetmask(cidr)) && try(endswith(cidr, "/32"), false)
+    ])
+    error_message = "Each team SSH CIDR must be a valid IPv4 address in /32 format."
+  }
+}
+
 variable "key_name" {
   description = "Name of an existing EC2 key pair in the instance region."
   type        = string

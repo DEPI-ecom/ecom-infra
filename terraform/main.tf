@@ -43,9 +43,10 @@ module "subnet_isolated" {
 }
 
 module "security" {
-  source           = "./modules/security"
-  vpc_id           = module.vpc.id
-  ssh_allowed_cidr = var.ssh_allowed_cidr
+  source                 = "./modules/security"
+  vpc_id                 = module.vpc.id
+  ssh_allowed_cidr       = var.ssh_allowed_cidr
+  team_ssh_allowed_cidrs = var.team_ssh_allowed_cidrs
 }
 
 module "control_plane" {

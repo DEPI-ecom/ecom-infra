@@ -33,3 +33,9 @@ output "db_worker_private_ip" {
 output "db_volume_id" {
   value = aws_ebs_volume.postgres.id
 }
+
+output "ansible_inventory" {
+  description = "Ansible inventory for configuring the cluster through the bastion."
+  value       = local_file.ansible_inventory.content
+  sensitive   = true
+}

@@ -1,4 +1,4 @@
 ---
 ansible_user: ec2-user
 ansible_ssh_common_args: >-
-  -o ProxyJump=ec2-user@{{ hostvars[groups['bastion'][0]].ansible_host }}
+  -o ProxyJump=ec2-user@{{ hostvars[groups['bastions'][0]].ansible_host }}

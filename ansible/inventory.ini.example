@@ -1,7 +1,7 @@
 # Example only. Generate the real inventory from the current Terraform state:
 #   python3 generate_inventory.py
 
-[bastion]
+[bastions]
 bastion ansible_host=BASTION_PUBLIC_IP
 
 [control_plane]

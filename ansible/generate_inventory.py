@@ -52,7 +52,7 @@ def main() -> int:
     public_worker_ip = values["public_worker_private_ip"]
     db_worker_ip = values["db_worker_private_ip"]
 
-    inventory = f"""[bastion]
+    inventory = f"""[bastions]
 bastion ansible_host={bastion_ip}
 
 [control_plane]

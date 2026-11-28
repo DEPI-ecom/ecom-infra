@@ -113,6 +113,49 @@ jobs:
         working-directory: terraform
         run: terraform output -raw ansible_inventory > ../ansible/inventory.ini
 
+      - name: Allow this runner to SSH to the bastion temporarily
+        if: inputs.execute
+        run: |
+          set -euo pipefail
+          runner_ip="$(curl -4 -fsS https://checkip.amazonaws.com | tr -d '\n')"
+          runner_cidr="${runner_ip}/32"
+          bastion_sg="$(aws ec2 describe-security-groups \
+            --filters Name=tag:Name,Values=bastion-sg \
+            --query 'SecurityGroups[0].GroupId' \
+            --output text)"
+
+          if [[ -z "$bastion_sg" || "$bastion_sg" == "None" ]]; then
+            echo "::error::Could not find the bastion security group."
+            exit 1
+          fi
+
+          has_rule=false
+          if aws ec2 describe-security-groups --group-ids "$bastion_sg" --output json |
+            jq -e --arg cidr "$runner_cidr" '
+              [.SecurityGroups[0].IpPermissions[]?
+                | select(.IpProtocol == "tcp" and .FromPort == 22 and .ToPort == 22)
+                | .IpRanges[]?.CidrIp] | index($cidr) != null
+            ' >/dev/null; then
+            has_rule=true
+          fi
+
+          added_rule=true
+          if [[ "$has_rule" == true ]]; then
+            added_rule=false
+          else
+            permission="$(jq -cn --arg cidr "$runner_cidr" --arg description "Temporary Ansible workflow run $GITHUB_RUN_ID" \
+              '[{IpProtocol:"tcp",FromPort:22,ToPort:22,IpRanges:[{CidrIp:$cidr,Description:$description}]}]')"
+            aws ec2 authorize-security-group-ingress \
+              --group-id "$bastion_sg" \
+              --ip-permissions "$permission"
+          fi
+
+          {
+            echo "BASTION_SG_ID=$bastion_sg"
+            echo "RUNNER_SSH_CIDR=$runner_cidr"
+            echo "RUNNER_SSH_RULE_ADDED=$added_rule"
+          } >> "$GITHUB_ENV"
+
       - name: Install Ansible
         if: inputs.execute
         working-directory: ansible
@@ -139,3 +182,14 @@ jobs:
           "$RUNNER_TEMP/ansible-venv/bin/ansible-playbook" \
             --private-key "$key_file" \
             playbook.yaml
+
+      - name: Revoke temporary bastion SSH access
+        if: ${{ always() && inputs.execute }}
+        run: |
+          if [[ "${RUNNER_SSH_RULE_ADDED:-false}" == true ]]; then
+            aws ec2 revoke-security-group-ingress \
+              --group-id "$BASTION_SG_ID" \
+              --protocol tcp \
+              --port 22 \
+              --cidr "$RUNNER_SSH_CIDR"
+          fi

@@ -1,7 +1,7 @@
 resource "local_file" "ansible_inventory" {
   filename = "${path.module}/../ansible/inventory.ini"
   content  = <<-EOT
-    [bastion]
+    [bastions]
     bastion ansible_host=${aws_eip.bastion.public_ip}
 
     [control_plane]

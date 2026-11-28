@@ -113,15 +113,13 @@ jobs:
       - name: Encrypt Ansible inventory
         if: inputs.execute
         run: |
-          terraform output -raw ansible_inventory | age --encrypt \
-            --recipients-file "$RUNNER_TEMP/inventory-recipient.pub" \
-            --output "$RUNNER_TEMP/inventory.ini.age"
+          terraform output -raw ansible_inventory 
 
       - name: Upload encrypted Ansible inventory
         if: inputs.execute
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          path: ${{ runner.temp }}/inventory.ini.age
+          path: ${{ runner.temp }}/inventory.ini
           archive: false
           if-no-files-found: error
           overwrite: true

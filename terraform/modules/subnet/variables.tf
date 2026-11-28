@@ -8,7 +8,6 @@ variable "public" {
   default = false
 }
 
-variable "public_route_table_id" {
-  type    = string
-  default = null
+variable "route_table_id" {
+  type = string
 }

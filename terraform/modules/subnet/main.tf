@@ -9,8 +9,12 @@ resource "aws_subnet" "this" {
   }
 }
 
-resource "aws_route_table_association" "public" {
-  count          = var.public ? 1 : 0
+moved {
+  from = aws_route_table_association.public[0]
+  to   = aws_route_table_association.this
+}
+
+resource "aws_route_table_association" "this" {
   subnet_id      = aws_subnet.this.id
-  route_table_id = var.public_route_table_id
+  route_table_id = var.route_table_id
 }

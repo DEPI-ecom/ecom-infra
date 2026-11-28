@@ -12,3 +12,24 @@ variable "key_name" {
   description = "Name of an existing EC2 key pair in the instance region."
   type        = string
 }
+
+variable "db_ami_id" {
+  description = "ID of a prepared x86_64 Amazon Linux 2023 AMI with the packages and container images needed to join the cluster offline and run PostgreSQL."
+  type        = string
+
+  validation {
+    condition     = can(regex("^ami-([0-9a-f]{8}|[0-9a-f]{17})$", var.db_ami_id))
+    error_message = "Enter a valid AMI ID for the isolated database worker."
+  }
+}
+
+variable "db_volume_size" {
+  description = "Size in GiB of the separate PostgreSQL data volume."
+  type        = number
+  default     = 10
+
+  validation {
+    condition     = var.db_volume_size >= 1 && var.db_volume_size <= 65536 && floor(var.db_volume_size) == var.db_volume_size
+    error_message = "Enter an integer disk size between 1 and 65536 GiB."
+  }
+}
